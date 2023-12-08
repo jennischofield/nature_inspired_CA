@@ -1,14 +1,101 @@
 import java.io.*;
 import java.util.Scanner;
-
-import javax.print.attribute.standard.JobStateReasons;
 import javax.xml.parsers.*;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 import java.util.ArrayList;
 import java.util.HashSet;
 public class AntColonyOptimiser {
+    public class Ant {
+        ArrayList<City> tourMemory;
+        ArrayList<Edge> edgePath;
+        City currentCity;
+        public Ant(City c){
+            //This sets the starting city
+            currentCity = c;
+            tourMemory.add(c);
+        }
+        public void setCurrentCity(City c){
+            currentCity = c;
+        }
+        public City getCurrentCity(){
+            return currentCity;
+        }
+        public ArrayList<City> getTourMemory(){
+            return tourMemory;
+        }
+        public void setTourMemory(ArrayList<City> c){
+            tourMemory = c;
+        }
+        public void addCityToTour(City c){
+            tourMemory.add(c);
+        }
+        public double calculateOverallFitness(){
+            double retValue = 0;
+            for(int i =0; i<tourMemory.size()-1;i++){
+                // We terminate at size -1 one, as in the case of A->B->C, you only need the measurements for A->B and B->C. There is
+                // no C->null value
+                //For whatever the next node in the list is...
+                String nextCityName =  tourMemory.get(i+1).getName();
+                //...get the name and add the weight from current city to that city
+                retValue += tourMemory.get(i).getWeightForEdge(nextCityName);
+            }
+            return retValue;
+        }
+        public boolean checkIfVisited(Edge e){
+            for(City c:tourMemory){
+                //Safer to do name comparison rather than direct equality - may avoid memory issues down the line
+                if(c.getName() == e.getDestination().getName()){
+                    return true;
+                }
+            }
+            return false;
+        }
+        public Edge decidePath(ArrayList<Edge> edges){
+            Edge bestEdge = edges.get(0);
+            for(Edge e:edges){
+                //this is a STAND IN HEURISTIC 
+                if(e.getPheromone()* e.getWeight() < bestEdge.getPheromone() * bestEdge.getWeight()){
+                    bestEdge = e;
+                }
+            }
+            return bestEdge;
+        }
+        public void calculatePath(HashSet<City> allCities){
+            //this takes in a hashset (ensures no duplicates on input), but the ant handles using an arraylist (as insertion order 
+            //matters)
 
+            while(tourMemory.size() < allCities.size()){
+                //get all possible nodes from the current node
+                //remove those that already are in tour memory
+                // Find the best possible edge from the list
+                //add to tourmemory
+                ArrayList<Edge>possiblePaths = currentCity.getPaths();
+                for(Edge p:possiblePaths){
+                    if(checkIfVisited(p)){
+                        possiblePaths.remove(p);
+                    }
+                }
+                //Now we have a list of actual possible paths
+                // Pass that to our ant
+                Edge bestEdge = decidePath(possiblePaths);
+                //Now we've found the best edge, add that edge's destination to the tour memory and set current node to it
+                //We also add the best edge to the edge list
+                edgePath.add(bestEdge);
+                currentCity = bestEdge.getDestination();
+                tourMemory.add(currentCity);
+                //tour memory has now been increased, continue iterating
+            
+            }
+            //Once this is done, you can then check the overall fitness of the path.
+        }
+        public void increasePheromoneOnPath(double d){
+            //This gets called after the path has been decided - it iterates through this ant's paths and increases the pheromone by d
+            for(Edge e:edgePath){
+                e.updatePheromone(d);
+            }
+        }
+    }    
     public class City {
         private String cityName;
         private ArrayList<Edge> paths;
@@ -31,6 +118,24 @@ public class AntColonyOptimiser {
         }
         public ArrayList<Edge> getPaths(){
             return paths;
+        }
+        public double getWeightForEdge(String name){
+
+            if(name == null){
+                System.out.println("Destination Name Null.");
+                return -1;
+            }else if(!paths.contains(name)){
+                //We've overridden the equals in the Edge class to check if the name matches, then it exists.
+                //This way, we can use arraylist's contains
+                System.out.println("There is no path connecting city " + this.cityName + " with " + name);
+                return -1;
+            }else{
+                int edgeIndex = paths.indexOf(name);
+                Edge e = paths.get(edgeIndex);
+                //This is roundabout, and if there's time, it should be reworked into a hashset or something.
+                double returnWeight = e.getWeight();
+                return returnWeight;
+            }
         }
         public String getName(){
             return cityName;
@@ -67,7 +172,7 @@ public class AntColonyOptimiser {
         public void setPheromone(double p){
             pheromone = p;
         }
-        public City getNode(){
+        public City getDestination(){
             return destination;
         }
         public double getWeight(){
@@ -82,6 +187,21 @@ public class AntColonyOptimiser {
         public void updatePheromone(double p){
             //This is until I set up the update function of Q/fitness
             pheromone  *= p;
+        }
+        @Override
+        public boolean equals(Object o){
+            if(this == o){
+                return true;
+            }
+            
+            if((o.getClass()) == String.class){
+                //This checks to see if the edge is the same - a workaround for getting the weights from the ant (which only has cities)
+                return (o.toString() == this.destination.toString());
+            }
+            if(o == null ||o.getClass() != this.getClass()){
+                return false;
+            }
+            return ((Edge)o).getDestination().equals(this.destination);
         }
     }
     public class Graph {
@@ -237,6 +357,8 @@ public class AntColonyOptimiser {
             i) Fitness is probably something abt shortest distance
             5) Evaporation RAte
             6)Termination condition
+
+            So now we have a rough ACO - we haven't generated the ants but that would go in the "initialise aco methods"
           */
 
     }
