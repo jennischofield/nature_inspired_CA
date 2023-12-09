@@ -11,9 +11,11 @@ public class AntColonyOptimiser {
         ArrayList<City> tourMemory = new ArrayList<City>();
         ArrayList<Edge> edgePath = new ArrayList<Edge>();
         City currentCity;
+        City startingCity;
         public Ant(City c){
             //This sets the starting city
             currentCity = c;
+            startingCity = c;
             tourMemory.add(c);
         }
         public void setCurrentCity(City c){
@@ -21,6 +23,9 @@ public class AntColonyOptimiser {
         }
         public City getCurrentCity(){
             return currentCity;
+        }
+        public City getStartingCity(){
+            return startingCity;
         }
         public ArrayList<City> getTourMemory(){
             return tourMemory;
@@ -65,6 +70,16 @@ public class AntColonyOptimiser {
             }
             return bestEdge;
         }
+        public void returnJourney(City currCity){
+            ArrayList<Edge> paths = currCity.getPaths();
+            for(Edge e:paths){
+                if(e.getDestination().getName() == startingCity.getName()){
+                    edgePath.add(e);
+                    currentCity = startingCity;
+                    tourMemory.add(startingCity);
+                }
+            }
+        }
         public void calculatePath(ArrayList<City> allCities, double alpha, double beta){
             //this takes in a hashset (ensures no duplicates on input), but the ant handles using an arraylist (as insertion order 
             //matters)
@@ -96,6 +111,8 @@ public class AntColonyOptimiser {
                 //tour memory has now been increased, continue iterating
             
             }
+            //Return to the first node
+            returnJourney(currentCity);
             //Once this is done, you can then check the overall fitness of the path.
         }
         public void increasePheromoneOnPath(double d){
@@ -106,6 +123,13 @@ public class AntColonyOptimiser {
         }
         public String toString(){
             return "My current city is: " + currentCity + " and my overall fitness right now is: " + calculateOverallFitness(); 
+        }
+        public String printEdgePath(){
+            String s = currentCity.getName();
+            for(Edge e:edgePath){
+                s += "-[" +e.getWeight() + "]>" + e.getDestination().getName();
+            }
+            return s;
         }
     }    
     public class City {
@@ -176,10 +200,12 @@ public class AntColonyOptimiser {
     }
     public class Edge {
         private City destination;
+        private City origin;
         private double weight;
         private double pheromone;
-        public Edge(City d, double w){
+        public Edge(City d, double w, City o){
             destination = d;
+            origin = o;
             weight = w;
             pheromone = -1;
         }
@@ -192,6 +218,9 @@ public class AntColonyOptimiser {
         public void setPheromone(double p){
             pheromone = p;
         }
+        public void setOrigin(City o){
+            origin = o;
+        }
         public City getDestination(){
             return destination;
         }
@@ -200,6 +229,9 @@ public class AntColonyOptimiser {
         }
         public double getPheromone(){
             return pheromone;
+        }
+        public City getOrigin(){
+            return origin;
         }
         public void evaporatePheromone(double e){
             pheromone *= e;
@@ -347,7 +379,7 @@ public class AntColonyOptimiser {
                     //Something like after interpreting all this, iterate over the entire adjacency matrix, and point the city of
                     //that edge towards the column's city.
                    // System.out.println(elem.getTextContent());
-                    Edge newEdge = new Edge(new City(elem.getTextContent()),Double.parseDouble(elem.getAttribute("cost")) );
+                    Edge newEdge = new Edge(new City(elem.getTextContent()),Double.parseDouble(elem.getAttribute("cost")), newCity );
                     newCity.addPath(newEdge);
                  //   System.out.println(newCity);
                     retGraph.setAdjacencyMatrixValue(i ,Integer.parseInt(elem.getTextContent()), newEdge);
@@ -406,7 +438,7 @@ public class AntColonyOptimiser {
         retString += cl.get(cl.size()-1).getName();
         return retString;
     }
-    public double runAntColonySim(Graph graph, int numAnts, double evaporationRate, double alpha, double beta, int terminationCount){
+    public double runAntColonySim(Graph graph, int numAnts, double evaporationRate, double alpha, double beta, int terminationCount, boolean elitism, int rank){
         //Intitalise the ants
         ArrayList<Ant> antColony = new ArrayList<Ant>();
         
@@ -415,6 +447,8 @@ public class AntColonyOptimiser {
         int fitnessEvals = 0;
         double bestFitness = Double.MAX_VALUE;
         Ant bestAnt = new Ant(null);
+        //This is an array list to make it easier for adding/deleting
+        ArrayList<Ant> rankedAnts = new ArrayList<Ant>();
         ArrayList<City> bestPath = new ArrayList<City>();
         while(fitnessEvals < terminationCount){
             //run each ant's path
@@ -440,7 +474,22 @@ public class AntColonyOptimiser {
                     bestPath = a.getTourMemory();
                     bestAnt = a;
                     System.out.println("Best Fitness is now:" + bestFitness +"\nBest Ant: " + bestAnt + " # "+count);
-                    
+                    if(rank >0){
+                        if(rankedAnts.size() == 0){
+                            rankedAnts.add(bestAnt);
+                        }
+                        for(int i = 0; i <rankedAnts.size(); i++){
+                            if(rankedAnts.get(i).calculateOverallFitness() > bestFitness){
+                                rankedAnts.add(i,bestAnt);
+                                //adds the ant in its correct position
+                                break;
+                            }
+                        }
+                        if(rankedAnts.size() > rank){
+                            //If it's gone over the rank number, remove the last element (the worst in the list)
+                            rankedAnts.remove(rankedAnts.size()-1);
+                        }
+                    }
                 }
                 count++;
             }
@@ -449,7 +498,16 @@ public class AntColonyOptimiser {
                 //Inverse of the best fitness
                 a.increasePheromoneOnPath(1/bestFitness);
             }
-            
+            if(elitism){
+                //increases the best path pheromone again for the best ant
+                bestAnt.increasePheromoneOnPath(1/bestFitness);
+            }
+            if(rank > 0){
+                for(Ant ra:rankedAnts){
+                    //for the top x ants increase their pheromone paths too
+                    ra.increasePheromoneOnPath(1/bestFitness);
+                }
+            }
             //Evaporate all the paths
             graph.evaporatePaths(evaporationRate);
             //Reset the antcolony
@@ -457,6 +515,7 @@ public class AntColonyOptimiser {
 
         }
         System.out.println(printPath(bestPath));
+        System.out.println(bestAnt.printEdgePath());
         System.out.println(bestAnt);
         return bestFitness;
     } 
@@ -473,7 +532,7 @@ public class AntColonyOptimiser {
 
         Graph testGraph = aco.setUpGraph(testDoc);
         aco.initialisePheromone(testGraph);
-        aco.runAntColonySim(testGraph, 100, 0.7, 0.5, 0.5, 10000);
+        aco.runAntColonySim(testGraph, 100, 0.7, 0.5, 0.5, 10000,false,0);
         
         //Okay, so the file reading and graph configuration is set up, 
         //Albeit with some formatting errors. Next steps is to set up the Ants and the other
