@@ -206,7 +206,7 @@ public class AntColonyOptimiser {
         }
         public void updatePheromone(double p){
             //This is until I set up the update function of Q/fitness
-            pheromone  *= p;
+            pheromone  *= (1-p);
         }
         @Override
         public boolean equals(Object o){
@@ -346,10 +346,10 @@ public class AntColonyOptimiser {
                     //Right now, it's just getting a blank city with no connections. 
                     //Something like after interpreting all this, iterate over the entire adjacency matrix, and point the city of
                     //that edge towards the column's city.
-                    System.err.println(elem.getTextContent());
+                   // System.out.println(elem.getTextContent());
                     Edge newEdge = new Edge(new City(elem.getTextContent()),Double.parseDouble(elem.getAttribute("cost")) );
                     newCity.addPath(newEdge);
-                    System.out.println(newCity);
+                 //   System.out.println(newCity);
                     retGraph.setAdjacencyMatrixValue(i ,Integer.parseInt(elem.getTextContent()), newEdge);
                     //This iterates through all the edges for one 'vertex' in the file
                     //This assigns a vertex its paths, and also inputs it the graph's own adjacency matrix
@@ -428,7 +428,7 @@ public class AntColonyOptimiser {
                 Ant newAnt = new Ant(startCity);
                 antColony.add(newAnt);
             }
-            System.out.println(antColony.size());
+           // System.out.println(antColony.size());
             int count = 0;
             for(Ant a:antColony){
                 
@@ -463,7 +463,7 @@ public class AntColonyOptimiser {
     
     public static void main(String [] args){
         AntColonyOptimiser aco = new AntColonyOptimiser();
-        File testFile = new File("Test.xml");
+        File testFile = new File("burma14.xml");
         Document testDoc = null;
         try{
             testDoc = aco.parseXML(testFile);
@@ -473,7 +473,7 @@ public class AntColonyOptimiser {
 
         Graph testGraph = aco.setUpGraph(testDoc);
         aco.initialisePheromone(testGraph);
-        aco.runAntColonySim(testGraph, 10, 0.7, 0.5, 0.5, 100);
+        aco.runAntColonySim(testGraph, 100, 0.7, 0.5, 0.5, 10000);
         
         //Okay, so the file reading and graph configuration is set up, 
         //Albeit with some formatting errors. Next steps is to set up the Ants and the other
