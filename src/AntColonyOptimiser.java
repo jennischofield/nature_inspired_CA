@@ -1,8 +1,8 @@
 package src;
+
 import java.io.*;
 import java.util.Scanner;
 import javax.xml.parsers.*;
-
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 import java.util.ArrayList;
@@ -11,9 +11,10 @@ import java.util.Random;
 public class AntColonyOptimiser {
     ArrayList<Double> y = new ArrayList<Double>();
 
-    public ArrayList<Double> getY(){
+    public ArrayList<Double> getY() {
         return y;
     }
+
     /**
      * Parses the input XML file and accesses the DOM structure
      * 
@@ -171,6 +172,7 @@ public class AntColonyOptimiser {
      *                         path calculation
      * @param beta             - double - the effect the weight of an edge has on
      *                         the path calculation
+     * @param q                - double - the pheromone update rate - q/fitness
      * @param terminationCount - int - the number of fitness evaluations until
      *                         termination
      * @param elitism          - boolean - to use the elitism adjustment of ACO
@@ -182,7 +184,7 @@ public class AntColonyOptimiser {
      *                         found with weights
      * @return double - the best fitness of the graph found.
      */
-    public double runAntColonySim(Graph graph, int numAnts, double evaporationRate, double alpha, double beta,
+    public double runAntColonySim(Graph graph, int numAnts, double evaporationRate, double alpha, double beta, double q,
             int terminationCount, boolean elitism, int rank, boolean viewBestPath, boolean viewBestEdgePath) {
 
         // Intitalise the ant list
@@ -209,7 +211,7 @@ public class AntColonyOptimiser {
                 // Calculate that Ant's path and fitness
                 a.calculatePath(graph.getCities(), alpha, beta);
                 double antFitness = a.calculateOverallFitness();
-                //This y is used for graphing testing results
+                // This y is used for graphing testing results
                 y.add(antFitness);
                 fitnessEvals++;
                 // If the ant's fitness is better than the best fitness so far - we are
@@ -244,19 +246,19 @@ public class AntColonyOptimiser {
             // Updating the path
             for (Ant a : antColony) {
                 // Inverse of the best fitness
-                a.increasePheromoneOnPath(1 / bestFitness);
+                a.increasePheromoneOnPath(q / bestFitness);
             }
 
             // Elitism gives the local best path additional pheromone to encourage using
             // those edges
             if (elitism) {
                 // increases the best path pheromone again for the best ant
-                bestAnt.increasePheromoneOnPath(1 / bestFitness);
+                bestAnt.increasePheromoneOnPath(q / bestFitness);
             }
             // The rank system gives the top x ants' paths additional pheromone
             if (rank > 0) {
                 for (Ant ra : rankedAnts) {
-                    ra.increasePheromoneOnPath(1 / bestFitness);
+                    ra.increasePheromoneOnPath(q / bestFitness);
                 }
             }
             // Evaporate all the paths
@@ -275,14 +277,17 @@ public class AntColonyOptimiser {
         }
         return bestFitness;
     }
-    public void runTests(){
-        //Run all the tests
+
+    public void runTests() {
+        // Run all the tests
 
     }
-    public void displayResults(String appName, String plotTitle, int[][] xCoor, int[][] yCoor, String[] datasetName){
+
+    public void displayResults(String appName, String plotTitle, int[][] xCoor, int[][] yCoor, String[] datasetName) {
         XYLinePlot chart = new XYLinePlot(appName, plotTitle, xCoor, yCoor, datasetName);
-        chart.savePlot("/images/"+plotTitle);
+        chart.savePlot("/images/" + plotTitle);
     }
+
     /**
      * Main method, take in user input and initialise Graph before running the ACO
      * 
@@ -294,6 +299,21 @@ public class AntColonyOptimiser {
         boolean continuing = true;
         while (continuing) {
             System.out.println("Welcome to the Ant Colony Optimiser!");
+            System.out.println("Do you wish to run the tests and generate graphs? (Y/N)");
+             while (true) {
+                String runTests = reader.nextLine();
+                if (runTests.equalsIgnoreCase("Y")) {
+                    System.out.println("Running tests now.");
+                    aco.runTests(); 
+                    break;
+                } else if (runTests.equalsIgnoreCase("N")) {
+                    System.out.println("Continuing to ACO simulator.");
+                    break;
+                } else {
+                    System.out.println("Please enter Y or N");
+                }
+
+            }
             System.out.println("Please enter the file name you wish to use:\n");
             File acoFile = new File(reader.nextLine());
             Document doc = null;
@@ -303,38 +323,38 @@ public class AntColonyOptimiser {
                 System.out.println(
                         "Error reading the file. Please check your spelling - you must include the file extension.");
                 System.out.println("See full exception? Y/N");
-                if (reader.nextLine().equals("Y")) {
+                if (reader.nextLine().equalsIgnoreCase("Y")) {
                     System.out.println(e.toString());
                 }
             } catch (ParserConfigurationException e) {
                 System.out.println("There has been an issue in the configuration build. Please restart and try again.");
                 System.out.println("See full exception? Y/N");
-                if (reader.nextLine().equals("Y")) {
+                if (reader.nextLine().equalsIgnoreCase("Y")) {
                     System.out.println(e.toString());
                 }
             } catch (IOException e) {
                 System.out.println("An IO exception has been encountered reading this file.");
                 System.out.println("See full exception? Y/N");
-                if (reader.nextLine().equals("Y")) {
+                if (reader.nextLine().equalsIgnoreCase("Y")) {
                     System.out.println(e.toString());
                 }
             } catch (SAXException e) {
                 System.out.println(
                         "There has been a parse error with the file. Please make sure it's formatted correctly.");
                 System.out.println("See full exception? Y/N");
-                if (reader.nextLine().equals("Y")) {
+                if (reader.nextLine().equalsIgnoreCase("Y")) {
                     System.out.println(e.toString());
                 }
             } catch (IllegalArgumentException e) {
                 System.out.println("The file cannot be null.");
                 System.out.println("See full exception? Y/N");
-                if (reader.nextLine().equals("Y")) {
+                if (reader.nextLine().equalsIgnoreCase("Y")) {
                     System.out.println(e.toString());
                 }
             } catch (Exception e) {
                 System.out.println("An unexpected error has occurred.");
                 System.out.println("See full exception? Y/N");
-                if (reader.nextLine().equals("Y")) {
+                if (reader.nextLine().equalsIgnoreCase("Y")) {
                     System.out.println(e.toString());
                 }
             }
@@ -346,13 +366,13 @@ public class AntColonyOptimiser {
             } catch (IllegalArgumentException e) {
                 System.out.println("The XML file must contain \"vertex\" elements.");
                 System.out.println("See full exception? Y/N");
-                if (reader.nextLine().equals("Y")) {
+                if (reader.nextLine().equalsIgnoreCase("Y")) {
                     System.out.println(e.toString());
                 }
             } catch (Exception e) {
                 System.out.println("An unexpected error has occurred.");
                 System.out.println("See full exception? Y/N");
-                if (reader.nextLine().equals("Y")) {
+                if (reader.nextLine().equalsIgnoreCase("Y")) {
                     System.out.println(e.toString());
                 }
             }
@@ -365,6 +385,7 @@ public class AntColonyOptimiser {
             double evaporationRate = 0.7;
             double alpha = 0.5;
             double beta = 0.5;
+            double q = 1;
             boolean elitism = false;
             int rank = 0;
             boolean bestPathPrint = false;
@@ -426,15 +447,28 @@ public class AntColonyOptimiser {
                     System.out.println("Please enter a number.");
                 }
             }
+            System.out.println(
+                    "What would you like the q value to be?\nThe q value is used to increase the pheromone by q/fitness. (Greater than 0)");
+            while (true) {
+                try {
+                    q = Double.parseDouble(reader.nextLine());
+                    if (q < 0) {
+                        q = 1;
+                    }
+                    break;
+                } catch (Exception e) {
+                    System.out.println("Please enter a number.");
+                }
+            }
             System.out.println("Would you like to use the elitism approach? (Y/N)");
             while (true) {
 
                 elitism = false;
                 String elitismInput = reader.nextLine();
-                if (elitismInput.equals("Y")) {
+                if (elitismInput.equalsIgnoreCase("Y")) {
                     elitism = true;
                     break;
-                } else if (elitismInput.equals("N")) {
+                } else if (elitismInput.equalsIgnoreCase("N")) {
                     elitism = false;
                     break;
                 } else {
@@ -447,7 +481,7 @@ public class AntColonyOptimiser {
 
                 rank = 0;
                 String rankInput = reader.nextLine();
-                if (rankInput.equals("Y")) {
+                if (rankInput.equalsIgnoreCase("Y")) {
                     System.out.println("How many elites? (Between 1 and 10,000)");
                     while (true) {
                         try {
@@ -463,7 +497,7 @@ public class AntColonyOptimiser {
                         }
                     }
                     break;
-                } else if (rankInput.equals("N")) {
+                } else if (rankInput.equalsIgnoreCase("N")) {
                     rank = 0;
                     break;
                 } else {
@@ -476,10 +510,10 @@ public class AntColonyOptimiser {
 
                 bestPathPrint = false;
                 String BPPinput = reader.nextLine();
-                if (BPPinput.equals("Y")) {
+                if (BPPinput.equalsIgnoreCase("Y")) {
                     bestPathPrint = true;
                     break;
-                } else if (BPPinput.equals("N")) {
+                } else if (BPPinput.equalsIgnoreCase("N")) {
                     bestPathPrint = false;
                     break;
                 } else {
@@ -492,10 +526,10 @@ public class AntColonyOptimiser {
 
                 bestPathEdgesPrint = false;
                 String BPPEinput = reader.nextLine();
-                if (BPPEinput.equals("Y")) {
+                if (BPPEinput.equalsIgnoreCase("Y")) {
                     bestPathEdgesPrint = true;
                     break;
-                } else if (BPPEinput.equals("N")) {
+                } else if (BPPEinput.equalsIgnoreCase("N")) {
                     bestPathEdgesPrint = false;
                     break;
                 } else {
@@ -505,7 +539,8 @@ public class AntColonyOptimiser {
             }
 
             System.out.println("Running Simulation Now.");
-            double bestFitness = aco.runAntColonySim(testGraph, numAnts, evaporationRate, alpha, beta, 10000, elitism,
+            double bestFitness = aco.runAntColonySim(testGraph, numAnts, evaporationRate, alpha, beta, q, 10000,
+                    elitism,
                     rank, bestPathPrint, bestPathEdgesPrint);
             System.out.println("The best fitness found was " + bestFitness);
 
@@ -513,11 +548,11 @@ public class AntColonyOptimiser {
 
             while (true) {
                 String continuingInput = reader.nextLine();
-                if (continuingInput.equals("Y")) {
+                if (continuingInput.equalsIgnoreCase("Y")) {
                     continuing = true;
                     System.out.println("Resetting to the beginning...");
                     break;
-                } else if (continuingInput.equals("N")) {
+                } else if (continuingInput.equalsIgnoreCase("N")) {
                     continuing = false;
                     reader.close();
                     System.out.println("Thank you! Goodbye!");
