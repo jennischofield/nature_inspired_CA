@@ -9,12 +9,21 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class AntColonyOptimiser {
+    ArrayList<Double> x = new ArrayList<Double>();
     ArrayList<Double> y = new ArrayList<Double>();
 
     public ArrayList<Double> getY() {
         return y;
     }
 
+    public ArrayList<Double> getX() {
+        return x;
+    }
+    public void clearXandY(){
+        x.clear();
+        y.clear();
+    }
+   
     /**
      * Parses the input XML file and accesses the DOM structure
      * 
@@ -194,6 +203,7 @@ public class AntColonyOptimiser {
         // the best fitness.
         int fitnessEvals = 0;
         double bestFitness = Double.MAX_VALUE;
+        
         Ant bestAnt = new Ant(null);
         // This is an array list to make it easier for adding/deleting
         ArrayList<Ant> rankedAnts = new ArrayList<Ant>();
@@ -207,18 +217,26 @@ public class AntColonyOptimiser {
                 antColony.add(newAnt);
             }
             // For every ant in the colony
-            for (Ant a : antColony) {
+            double localBestFitness = Double.MAX_VALUE;
+            for (int i = 0; i < antColony.size(); i++) {
+                Ant a = antColony.get(i);
                 // Calculate that Ant's path and fitness
                 a.calculatePath(graph.getCities(), alpha, beta);
                 double antFitness = a.calculateOverallFitness();
                 // This y is used for graphing testing results
-                y.add(antFitness);
+                // sneaky way to double - saves a headache when graphing
+                //x.add(fitnessEvals * 1.0);
+                //y.add(bestFitness);
                 fitnessEvals++;
+                if(antFitness <localBestFitness){
+                    localBestFitness = antFitness;
+                }
                 // If the ant's fitness is better than the best fitness so far - we are
                 // minimising the fitness
                 if (antFitness < bestFitness) {
                     // Make this ant the best ant, best path, and best fitness
                     bestFitness = antFitness;
+                    
                     bestPath = a.getTourMemory();
                     bestAnt = a;
 
@@ -229,9 +247,9 @@ public class AntColonyOptimiser {
                             rankedAnts.add(bestAnt);
                         }
                         // Iterate the list and slot in the ant in the correct slot
-                        for (int i = 0; i < rankedAnts.size(); i++) {
-                            if (rankedAnts.get(i).calculateOverallFitness() > bestFitness) {
-                                rankedAnts.add(i, bestAnt);
+                        for (int j = 0; j < rankedAnts.size(); j++) {
+                            if (rankedAnts.get(j).calculateOverallFitness() > bestFitness) {
+                                rankedAnts.add(j, bestAnt);
                                 break;
                             }
                         }
@@ -239,10 +257,23 @@ public class AntColonyOptimiser {
                         if (rankedAnts.size() > rank) {
                             rankedAnts.remove(rankedAnts.size() - 1);
                         }
-                    }
-                }
-            }
 
+                    }
+
+                }
+                
+               
+              
+                if (fitnessEvals >= terminationCount ) {
+                    break;
+                }
+                
+            }
+            System.out.println(localBestFitness);
+           if(localBestFitness != Integer.MAX_VALUE){
+            x.add(fitnessEvals * 1.0);
+            y.add(localBestFitness);
+           }
             // Updating the path
             for (Ant a : antColony) {
                 // Inverse of the best fitness
@@ -265,6 +296,7 @@ public class AntColonyOptimiser {
             graph.evaporatePaths(evaporationRate);
             // Reset the antcolony - this way excessive memory isn't used.
             antColony.clear();
+            
 
         }
         // If the user wants to see the path with or without the weights
@@ -277,15 +309,544 @@ public class AntColonyOptimiser {
         }
         return bestFitness;
     }
-
+    /**
+     * This method runs the tests and generates graphs out of the data derived
+     */
     public void runTests() {
         // Run all the tests
+        
+        double[][] numberOfFitnessEvals = new double[4][10000];
+        double[][] fitnessOverTime = new double[4][10000];
+        File burmaFile = new File("burma14.xml");
+        File brazilFile = new File("brazil58.xml");
+        String[] datasetNames = new String[5];
+        try {
+            Document burmaDocument = parseXML(burmaFile);
+            Document brazilDocument = parseXML(brazilFile);
+            Graph gBurma = setUpGraph(burmaDocument);
+            Graph gBurma2 = setUpGraph(burmaDocument);
+            Graph gBurma3 = setUpGraph(burmaDocument);
+            Graph gBurma4 = setUpGraph(burmaDocument);
+            Graph gBrazil = setUpGraph(brazilDocument);
+            // Base variables:
+            // numAnts = 100, evaporation rate = 0.7, alpha = 0.5, beta =0.5, q = 1,
+            // termination count = 10,000, elitism = false, rank = 0, view best path =
+            // false, view best edge = false;
+            // Number of ant experiments: 1, 10, 50, 100, 1,000, 10,000
+            ArrayList<Double> antTestFitnesses = new ArrayList<Double>();
+            // Ant population = 1
+            initialisePheromone(gBurma);
+            double fitness1 = runAntColonySim(gBurma, 10, 0.7, 0.5, 0.5, 1, 10000, false, 0, false, false);
+            antTestFitnesses.add(fitness1);
+            ArrayList<Double> xVals = getX();
+            ArrayList<Double> yVals = getY();
+            System.out.println(yVals.size());
+            for (int i = 0; i < xVals.size(); i++) {
+                if (xVals.get(i) != null) {
+                    numberOfFitnessEvals[0][i] = Double.valueOf(xVals.get(i));
+                    fitnessOverTime[0][i] = Double.valueOf(yVals.get(i));
+                }
+            }
+            datasetNames[0] = "Ant Population 10: Burma";
+            clearXandY();
+            
+            // Ant population = 10
+            initialisePheromone(gBurma2);
+            double fitness2 = runAntColonySim(gBurma2, 100, 0.7, 0.5, 0.5, 1, 10000, false, 0, false, false);
+            antTestFitnesses.add(fitness2);
+            ArrayList<Double> xVals2 = getX();
+            ArrayList<Double> yVals2 = getY();
+            for (int i = 0; i < xVals2.size(); i++) {
+                if (xVals2.get(i) != null) {
 
+                    numberOfFitnessEvals[1][i] = Double.valueOf(xVals2.get(i));
+                    fitnessOverTime[1][i] = Double.valueOf(yVals2.get(i));
+                }
+            }
+            datasetNames[1] = "Ant Population 100: Burma";
+            clearXandY();
+            // Ant population = 100
+            initialisePheromone(gBurma3);
+            double fitness3 = runAntColonySim(gBurma3, 1000, 0.7, 0.5, 0.5, 1, 10000, false, 0, false, false);
+            antTestFitnesses.add(fitness3);
+            ArrayList<Double> xVals3 = getX();
+            ArrayList<Double> yVals3 = getY();
+            for (int i = 0; i < xVals3.size(); i++) {
+                if (xVals3.get(i) != null) {
+
+                    numberOfFitnessEvals[2][i] = Double.valueOf(xVals3.get(i));
+                    fitnessOverTime[2][i] = Double.valueOf(yVals3.get(i));
+                }
+            }
+            datasetNames[2] = "Ant Population 1,000: Burma";
+            clearXandY();
+            // Ant population = 1,000
+            initialisePheromone(gBurma4);
+            double fitness4 = runAntColonySim(gBurma4, 10000, 0.7, 0.5, 0.5, 1, 10000, false, 0, false, false);
+            antTestFitnesses.add(fitness4);
+            ArrayList<Double> xVals4 = getX();
+            ArrayList<Double> yVals4 = getY();
+            for (int i = 0; i < xVals4.size(); i++) {
+                if (xVals4.get(i) != null) {
+
+                    numberOfFitnessEvals[3][i] = Double.valueOf(xVals4.get(i));
+                    fitnessOverTime[3][i] = Double.valueOf(yVals4.get(i));
+                }
+            }
+            datasetNames[3] = "Ant Population 10,000: Burma";
+            
+            clearXandY();
+            // Display the ant test results [4274.0, 3731.0, 4410.0, 4797.0]
+            displayResults("Ant Population Experimentation - Local Best - Burma", "Ant Population Experimentation - Local Best - Burma", numberOfFitnessEvals,
+                    fitnessOverTime, datasetNames, 3000);
+            
+            
+            // Evaporation rate experiment: 0.1,0.2,0.3 etc
+            double pheromone = 0.1;
+           
+            double[][] numberOfFitnessEvalsPheromone = new double[10][10000];
+            double[][] fitnessOverTimePheromone = new double[10][10000];
+            String[] pheromoneLevels = new String[10];
+            Graph gBurmaP = setUpGraph(burmaDocument);
+            initialisePheromone(gBurmaP);
+
+            for(int i = 0; i < 10; i++){
+                runAntColonySim(gBurmaP, 100, pheromone, 0.5, 0.5, 1, 10000, false, 0, false, false);
+                ArrayList<Double> xValsPheromone = getX();
+                ArrayList<Double> yValsPheromone = getY();
+             for (int j = 0; j < xValsPheromone.size(); j++) {
+                if (xValsPheromone.get(j) != null) {
+                    numberOfFitnessEvalsPheromone[i][j] = Double.valueOf(xValsPheromone.get(j));
+                    fitnessOverTimePheromone[i][j] = Double.valueOf(yValsPheromone.get(j));
+                }
+            }
+                pheromoneLevels[i] = "Evaporation Rate " + String.format("%.2f", pheromone) + ": Burma";
+                clearXandY();
+                pheromone +=0.1;
+                gBurmaP = null;
+                gBurmaP = setUpGraph(burmaDocument);
+                initialisePheromone(gBurmaP);
+
+            }
+            displayResults("Evaporation Rate Experimentation - Local Best - Burma", "Evaporation Rate Experimentation - Local Best - Burma", numberOfFitnessEvalsPheromone,
+                    fitnessOverTimePheromone, pheromoneLevels, 3000);
+            
+            // Alpha/Beta experiment: 0.1/0.9, 0.2/0.8 etc
+            double alpha = 0.1;
+            double beta = 0.9;
+            double ABFitness = 0;
+            double[][] numberOfFitnessEvalsAB= new double[10][10000];
+            double[][] fitnessOverTimeAB = new double[10][10000];
+            String[] ABRatios = new String[10];
+            Graph gBurmaAB = setUpGraph(burmaDocument);
+            initialisePheromone(gBurmaAB);
+
+            for(int i = 0; i < 10; i++){
+                ABFitness = runAntColonySim(gBurmaAB, 100, 0.7, alpha, beta, 1, 10000, false, 0, false, false);
+                System.out.println(ABFitness);
+                ArrayList<Double> xValsAB = getX();
+                ArrayList<Double> yValsAB = getY();
+             for (int j = 0; j < xValsAB.size(); j++) {
+                if (xValsAB.get(j) != null) {
+                    numberOfFitnessEvalsAB[i][j] = Double.valueOf(xValsAB.get(j));
+                    fitnessOverTimeAB[i][j] = Double.valueOf(yValsAB.get(j));
+                }
+            }
+                ABRatios[i] = "Alpha to Beta " + String.format("%.2f", alpha) + "/" + String.format("%.2f", beta) + ": Burma";
+                clearXandY();
+                alpha +=0.1;
+                beta -= 0.1;
+                gBurmaAB = null;
+                gBurmaAB = setUpGraph(burmaDocument);
+                initialisePheromone(gBurmaAB);
+
+            }
+            displayResults("Alpha-Beta Ratio - Local Best - Burma", "Alpha-Beta Ratio - Local Best - Burma", numberOfFitnessEvalsAB,
+                    fitnessOverTimeAB, ABRatios, 3000);
+            // Elitism vs rank (5,10,20,50) vs nothing
+            
+            double[][] numberOfFitnessEvalsElite= new double[6][10000];
+            double[][] fitnessOverTimeElite = new double[6][10000];
+            String[] eliteVRankVNormal = new String[6];
+            Graph gBurmaElite = setUpGraph(burmaDocument);
+            initialisePheromone(gBurmaElite);
+            runAntColonySim(gBurmaElite, 100, 0.7, 0.5, 0.5, 1, 10000, true, 0, false, false);
+        
+            ArrayList<Double> xValsElite = getX();
+            ArrayList<Double> yValsElite = getY();
+            for (int i = 0; i < xValsElite.size(); i++) {
+                if (xValsElite.get(i) != null) {
+
+                    numberOfFitnessEvalsElite[0][i] = Double.valueOf(xValsElite.get(i));
+                    fitnessOverTimeElite[0][i] = Double.valueOf(yValsElite.get(i));
+                }
+            }
+            eliteVRankVNormal[0] = "Elitism Approach: Burma";
+                clearXandY();
+                gBurmaElite = null;
+                gBurmaElite = setUpGraph(burmaDocument);
+                initialisePheromone(gBurmaElite);
+            //Rank 5
+            runAntColonySim(gBurmaElite, 100, 0.7, 0.5, 0.5, 1, 10000, false, 5, false, false);
+        
+            ArrayList<Double> xValsRank5 = getX();
+            ArrayList<Double> yValsRank5 = getY();
+            for (int i = 0; i < xValsRank5.size(); i++) {
+                if (xValsRank5.get(i) != null) {
+
+                    numberOfFitnessEvalsElite[1][i] = Double.valueOf(xValsRank5.get(i));
+                    fitnessOverTimeElite[1][i] = Double.valueOf(yValsRank5.get(i));
+                }
+            }
+            eliteVRankVNormal[1] = "Rank Approach - 5: Burma";
+                clearXandY();
+                gBurmaElite = null;
+                gBurmaElite = setUpGraph(burmaDocument);
+                initialisePheromone(gBurmaElite);
+            //Rank 10
+            runAntColonySim(gBurmaElite, 100, 0.7, 0.5, 0.5, 1, 10000, false, 10, false, false);
+        
+            ArrayList<Double> xValsRank10 = getX();
+            ArrayList<Double> yValsRank10 = getY();
+            for (int i = 0; i < xValsRank10.size(); i++) {
+                if (xValsRank10.get(i) != null) {
+
+                    numberOfFitnessEvalsElite[2][i] = Double.valueOf(xValsRank10.get(i));
+                    fitnessOverTimeElite[2][i] = Double.valueOf(yValsRank10.get(i));
+                }
+            }
+            eliteVRankVNormal[2] = "Rank Approach - 10: Burma";
+                clearXandY();
+                gBurmaElite = null;
+                gBurmaElite = setUpGraph(burmaDocument);
+                initialisePheromone(gBurmaElite);
+
+            //Rank 20
+            runAntColonySim(gBurmaElite, 100, 0.7, 0.5, 0.5, 1, 10000, false, 20, false, false);
+        
+            ArrayList<Double> xValsRank20 = getX();
+            ArrayList<Double> yValsRank20 = getY();
+            for (int i = 0; i < xValsRank20.size(); i++) {
+                if (xValsRank20.get(i) != null) {
+
+                    numberOfFitnessEvalsElite[3][i] = Double.valueOf(xValsRank20.get(i));
+                    fitnessOverTimeElite[3][i] = Double.valueOf(yValsRank20.get(i));
+                }
+            }
+            eliteVRankVNormal[3] = "Rank Approach - 20: Burma";
+                clearXandY();
+                gBurmaElite = null;
+                gBurmaElite = setUpGraph(burmaDocument);
+                initialisePheromone(gBurmaElite);
+            //Rank 50
+            runAntColonySim(gBurmaElite, 100, 0.7, 0.5, 0.5, 1, 10000, false, 50, false, false);
+        
+            ArrayList<Double> xValsRank50 = getX();
+            ArrayList<Double> yValsRank50 = getY();
+            for (int i = 0; i < xValsRank50.size(); i++) {
+                if (xValsRank50.get(i) != null) {
+
+                    numberOfFitnessEvalsElite[4][i] = Double.valueOf(xValsRank50.get(i));
+                    fitnessOverTimeElite[4][i] = Double.valueOf(yValsRank50.get(i));
+                }
+            }
+            eliteVRankVNormal[4] = "Rank Approach - 50: Burma";
+                clearXandY();
+                gBurmaElite = null;
+                gBurmaElite = setUpGraph(burmaDocument);
+                initialisePheromone(gBurmaElite);
+            runAntColonySim(gBurmaElite, 100, 0.7, 0.5, 0.5, 1, 10000, false, 0, false, false);
+        
+            ArrayList<Double> xValsNorm = getX();
+            ArrayList<Double> yValsNorm = getY();
+            for (int i = 0; i < xValsNorm.size(); i++) {
+                if (xValsNorm.get(i) != null) {
+
+                    numberOfFitnessEvalsElite[5][i] = Double.valueOf(xValsNorm.get(i));
+                    fitnessOverTimeElite[5][i] = Double.valueOf(yValsNorm.get(i));
+                }
+            }
+            eliteVRankVNormal[5] = "Basic Approach: Burma";
+                clearXandY();
+                gBurmaElite = null;
+                gBurmaElite = setUpGraph(burmaDocument);
+                initialisePheromone(gBurmaElite);
+            displayResults("Elitism vs Rank vs Basic - Local Best - Burma", "Elitism vs Rank vs Basic - Local Best - Burma", numberOfFitnessEvalsElite,
+                    fitnessOverTimeElite, eliteVRankVNormal, 3000);
+
+
+
+        //Brazil DS now
+        double[][] numberOfFitnessEvalsBr = new double[4][10000];
+        double[][] fitnessOverTimeBr = new double[4][10000];
+        String[] datasetNamesBr = new String[5];
+        ArrayList<Double> antTestFitnessesBrazil = new ArrayList<Double>();
+            // Ant population = 1
+            initialisePheromone(gBrazil);
+            double fitness1Br = runAntColonySim(gBrazil, 10, 0.7, 0.5, 0.5, 1, 10000, false, 0, false, false);
+            antTestFitnesses.add(fitness1Br);
+            ArrayList<Double> xValsbr = getX();
+            ArrayList<Double> yValsbr = getY();
+            System.out.println(yValsbr.size());
+            for (int i = 0; i < xValsbr.size(); i++) {
+                if (xValsbr.get(i) != null) {
+                    numberOfFitnessEvalsBr[0][i] = Double.valueOf(xValsbr.get(i));
+                    fitnessOverTimeBr[0][i] = Double.valueOf(yValsbr.get(i));
+                }
+            }
+            datasetNamesBr[0] = "Ant Population 10: Brazil";
+            clearXandY();
+            
+            // Ant population = 10
+            gBrazil = null;
+            gBrazil = setUpGraph(brazilDocument);
+            initialisePheromone(gBrazil);
+            double fitness2Br = runAntColonySim(gBrazil, 100, 0.7, 0.5, 0.5, 1, 10000, false, 0, false, false);
+            antTestFitnessesBrazil.add(fitness2Br);
+            ArrayList<Double> xVals2br = getX();
+            ArrayList<Double> yVals2br = getY();
+            for (int i = 0; i < xVals2br.size(); i++) {
+                if (xVals2br.get(i) != null) {
+
+                    numberOfFitnessEvalsBr[1][i] = Double.valueOf(xVals2br.get(i));
+                    fitnessOverTimeBr[1][i] = Double.valueOf(yVals2br.get(i));
+                }
+            }
+            datasetNamesBr[1] = "Ant Population 100: Brazil";
+            clearXandY();
+            // Ant population = 100
+            gBrazil = null;
+            gBrazil = setUpGraph(brazilDocument);
+            initialisePheromone(gBurma3);
+            double fitness3br = runAntColonySim(gBrazil, 1000, 0.7, 0.5, 0.5, 1, 10000, false, 0, false, false);
+            antTestFitnessesBrazil.add(fitness3br);
+            ArrayList<Double> xVals3br = getX();
+            ArrayList<Double> yVals3br = getY();
+            for (int i = 0; i < xVals3br.size(); i++) {
+                if (xVals3br.get(i) != null) {
+
+                    numberOfFitnessEvalsBr[2][i] = Double.valueOf(xVals3br.get(i));
+                    fitnessOverTimeBr[2][i] = Double.valueOf(yVals3br.get(i));
+                }
+            }
+            datasetNamesBr[2] = "Ant Population 1,000: Brazil";
+            clearXandY();
+            // Ant population = 1,000
+            gBrazil = null;
+            gBrazil = setUpGraph(brazilDocument);
+            initialisePheromone(gBrazil);
+            double fitness4br = runAntColonySim(gBrazil, 10000, 0.7, 0.5, 0.5, 1, 10000, false, 0, false, false);
+            antTestFitnessesBrazil.add(fitness4br);
+            ArrayList<Double> xVals4br = getX();
+            ArrayList<Double> yVals4br = getY();
+            for (int i = 0; i < xVals4br.size(); i++) {
+                if (xVals4br.get(i) != null) {
+
+                    numberOfFitnessEvalsBr[3][i] = Double.valueOf(xVals4br.get(i));
+                    fitnessOverTimeBr[3][i] = Double.valueOf(yVals4br.get(i));
+                }
+            }
+            datasetNamesBr[3] = "Ant Population 10,000: Brazil";
+            
+            clearXandY();
+            // Display the ant test results [4274.0, 3731.0, 4410.0, 4797.0]
+            displayResults("Ant Population Experimentation - Local Best - Brazil", "Ant Population Experimentation - Local Best - Brazil", numberOfFitnessEvalsBr,
+                    fitnessOverTimeBr, datasetNamesBr, 3000);
+            
+            
+            // Evaporation rate experiment: 0.1,0.2,0.3 etc
+            double pheromonebr = 0.1;
+            
+            double[][] numberOfFitnessEvalsPheromonebr = new double[10][10000];
+            double[][] fitnessOverTimePheromonebr = new double[10][10000];
+            String[] pheromoneLevelsbr = new String[10];
+            gBrazil = null;
+            gBrazil = setUpGraph(brazilDocument);
+            initialisePheromone(gBrazil);
+
+            for(int i = 0; i < 10; i++){
+                runAntColonySim(gBrazil, 100, pheromonebr, 0.5, 0.5, 1, 10000, false, 0, false, false);
+                ArrayList<Double> xValsPheromonebr = getX();
+                ArrayList<Double> yValsPheromonebr = getY();
+             for (int j = 0; j < xValsPheromonebr.size(); j++) {
+                if (xValsPheromonebr.get(j) != null) {
+                    numberOfFitnessEvalsPheromonebr[i][j] = Double.valueOf(xValsPheromonebr.get(j));
+                    fitnessOverTimePheromonebr[i][j] = Double.valueOf(yValsPheromonebr.get(j));
+                }
+            }
+                pheromoneLevelsbr[i] = "Evaporation Rate " + String.format("%.2f", pheromonebr) + ": Brazil";
+                clearXandY();
+                pheromonebr +=0.1;
+                gBrazil = null;
+                gBrazil = setUpGraph(brazilDocument);
+                initialisePheromone(gBrazil);
+
+            }
+            displayResults("Evaporation Rate Experimentation - Local Best - Brazil", "Evaporation Rate Experimentation - Local Best - Brazil", numberOfFitnessEvalsPheromonebr,
+                    fitnessOverTimePheromonebr, pheromoneLevelsbr, 3000);
+            
+            // Alpha/Beta experiment: 0.1/0.9, 0.2/0.8 etc
+            double alphabr = 0.1;
+            double betabr = 0.9;
+            double ABFitnessbr = 0;
+            double[][] numberOfFitnessEvalsABbr= new double[10][10000];
+            double[][] fitnessOverTimeABbr = new double[10][10000];
+            String[] ABRatiosbr = new String[10];
+            gBrazil = null;
+            gBrazil = setUpGraph(brazilDocument);
+            initialisePheromone(gBrazil);
+
+            for(int i = 0; i < 10; i++){
+                ABFitnessbr = runAntColonySim(gBrazil, 100, 0.7, alphabr, betabr, 1, 10000, false, 0, false, false);
+                System.out.println(ABFitnessbr);
+                ArrayList<Double> xValsABbr = getX();
+                ArrayList<Double> yValsABbr = getY();
+             for (int j = 0; j < xValsABbr.size(); j++) {
+                if (xValsABbr.get(j) != null) {
+                    numberOfFitnessEvalsABbr[i][j] = Double.valueOf(xValsABbr.get(j));
+                    fitnessOverTimeABbr[i][j] = Double.valueOf(yValsABbr.get(j));
+                }
+            }
+                ABRatiosbr[i] = "Alpha to Beta " + String.format("%.2f", alphabr) + "/" + String.format("%.2f", betabr) + ": Burma";
+                clearXandY();
+                alphabr +=0.1;
+                betabr -= 0.1;
+                gBrazil = null;
+                gBrazil = setUpGraph(brazilDocument);
+                initialisePheromone(gBrazil);
+
+            }
+            displayResults("Alpha-Beta Ratio - Local Best - Brazil", "Alpha-Beta Ratio - Local Best - Brazil", numberOfFitnessEvalsABbr,
+                    fitnessOverTimeABbr, ABRatiosbr, 3000);
+            // Elitism vs rank (5,10,20,50) vs nothing
+            
+            double[][] numberOfFitnessEvalsElitebr= new double[6][10000];
+            double[][] fitnessOverTimeElitebr = new double[6][10000];
+            String[] eliteVRankVNormalbr = new String[6];
+            gBrazil = null;
+            gBrazil = setUpGraph(brazilDocument);
+            initialisePheromone(gBrazil);
+            runAntColonySim(gBrazil, 100, 0.7, 0.5, 0.5, 1, 10000, true, 0, false, false);
+        
+            ArrayList<Double> xValsElitebr = getX();
+            ArrayList<Double> yValsElitebr = getY();
+            for (int i = 0; i < xValsElitebr.size(); i++) {
+                if (xValsElitebr.get(i) != null) {
+
+                    numberOfFitnessEvalsElitebr[0][i] = Double.valueOf(xValsElitebr.get(i));
+                    fitnessOverTimeElitebr[0][i] = Double.valueOf(yValsElitebr.get(i));
+                }
+            }
+            eliteVRankVNormalbr[0] = "Elitism Approach: Brazil";
+                clearXandY();
+                gBrazil = null;
+                gBrazil = setUpGraph(brazilDocument);
+                initialisePheromone(gBrazil);
+            //Rank 5
+            runAntColonySim(gBrazil, 100, 0.7, 0.5, 0.5, 1, 10000, false, 5, false, false);
+        
+            ArrayList<Double> xValsRank5br = getX();
+            ArrayList<Double> yValsRank5br = getY();
+            for (int i = 0; i < xValsRank5br.size(); i++) {
+                if (xValsRank5br.get(i) != null) {
+
+                    numberOfFitnessEvalsElitebr[1][i] = Double.valueOf(xValsRank5br.get(i));
+                    fitnessOverTimeElitebr[1][i] = Double.valueOf(yValsRank5br.get(i));
+                }
+            }
+            eliteVRankVNormalbr[1] = "Rank Approach - 5: Brazil";
+                clearXandY();
+                gBrazil = null;
+                gBrazil = setUpGraph(brazilDocument);
+                initialisePheromone(gBrazil);
+            //Rank 10
+            runAntColonySim(gBrazil, 100, 0.7, 0.5, 0.5, 1, 10000, false, 10, false, false);
+        
+            ArrayList<Double> xValsRank10br = getX();
+            ArrayList<Double> yValsRank10br = getY();
+            for (int i = 0; i < xValsRank10br.size(); i++) {
+                if (xValsRank10br.get(i) != null) {
+
+                    numberOfFitnessEvalsElitebr[2][i] = Double.valueOf(xValsRank10br.get(i));
+                    fitnessOverTimeElitebr[2][i] = Double.valueOf(yValsRank10br.get(i));
+                }
+            }
+            eliteVRankVNormalbr[2] = "Rank Approach - 10: Brazil";
+                clearXandY();
+                gBrazil = null;
+                gBrazil = setUpGraph(brazilDocument);
+                initialisePheromone(gBrazil);
+
+            //Rank 20
+            runAntColonySim(gBrazil, 100, 0.7, 0.5, 0.5, 1, 10000, false, 20, false, false);
+        
+            ArrayList<Double> xValsRank20br = getX();
+            ArrayList<Double> yValsRank20br = getY();
+            for (int i = 0; i < xValsRank20br.size(); i++) {
+                if (xValsRank20br.get(i) != null) {
+
+                    numberOfFitnessEvalsElitebr[3][i] = Double.valueOf(xValsRank20br.get(i));
+                    fitnessOverTimeElitebr[3][i] = Double.valueOf(yValsRank20br.get(i));
+                }
+            }
+            eliteVRankVNormalbr[3] = "Rank Approach - 20: Brazil";
+                clearXandY();
+                gBrazil = null;
+                gBrazil = setUpGraph(brazilDocument);
+                initialisePheromone(gBrazil);
+            //Rank 50
+            runAntColonySim(gBrazil, 100, 0.7, 0.5, 0.5, 1, 10000, false, 50, false, false);
+        
+            ArrayList<Double> xValsRank50br = getX();
+            ArrayList<Double> yValsRank50br = getY();
+            for (int i = 0; i < xValsRank50br.size(); i++) {
+                if (xValsRank50br.get(i) != null) {
+
+                    numberOfFitnessEvalsElitebr[4][i] = Double.valueOf(xValsRank50br.get(i));
+                    fitnessOverTimeElitebr[4][i] = Double.valueOf(yValsRank50br.get(i));
+                }
+            }
+            eliteVRankVNormalbr[4] = "Rank Approach - 50: Brazil";
+                clearXandY();
+                gBrazil = null;
+                gBrazil = setUpGraph(brazilDocument);
+                initialisePheromone(gBrazil);
+            runAntColonySim(gBrazil, 100, 0.7, 0.5, 0.5, 1, 10000, false, 0, false, false);
+        
+            ArrayList<Double> xValsNormbr = getX();
+            ArrayList<Double> yValsNormbr = getY();
+            for (int i = 0; i < xValsNormbr.size(); i++) {
+                if (xValsNormbr.get(i) != null) {
+
+                    numberOfFitnessEvalsElitebr[5][i] = Double.valueOf(xValsNormbr.get(i));
+                    fitnessOverTimeElitebr[5][i] = Double.valueOf(yValsNormbr.get(i));
+                }
+            }
+            eliteVRankVNormalbr[5] = "Basic Approach: Brazil";
+                clearXandY();
+                gBrazil = null;
+                gBrazil = setUpGraph(brazilDocument);
+                initialisePheromone(gBrazil);
+            displayResults("Elitism vs Rank vs Basic - Local Best - Brazil", "Elitism vs Rank vs Basic - Local Best - Brazil", numberOfFitnessEvalsElitebr,
+                    fitnessOverTimeElitebr, eliteVRankVNormalbr, 3000);
+        } catch (Exception e) {
+            System.out.println("Error reading the files: ");
+            e.printStackTrace();
+        }
     }
-
-    public void displayResults(String appName, String plotTitle, int[][] xCoor, int[][] yCoor, String[] datasetName) {
-        XYLinePlot chart = new XYLinePlot(appName, plotTitle, xCoor, yCoor, datasetName);
-        chart.savePlot("/images/" + plotTitle);
+    /**
+     * 
+     * @param appName - The name of the application window of the graph
+     * @param plotTitle - The title of the graph
+     * @param xCoor - The list of X coordinates
+     * @param yCoor - The list of Y coordinates
+     * @param datasetName - The name of each of the lines on the graph
+     * @param lowerYBound - If needed, adjusts the lower Y bound to give better visibility of the data
+     */
+    public void displayResults(String appName, String plotTitle, double[][] xCoor, double[][] yCoor,
+            String[] datasetName, int lowerYBound) {
+        XYLinePlot chart = new XYLinePlot(appName, plotTitle, xCoor, yCoor, datasetName, lowerYBound);
+        chart.savePlot("./images/", plotTitle + ".jpeg");
     }
 
     /**
@@ -294,28 +855,20 @@ public class AntColonyOptimiser {
      * @param args - String[] - any additional command line args
      */
     public static void main(String[] args) {
-        AntColonyOptimiser aco = new AntColonyOptimiser();
         Scanner reader = new Scanner(System.in);
         boolean continuing = true;
+       
         while (continuing) {
+            AntColonyOptimiser aco = new AntColonyOptimiser();
+            aco.clearXandY();
             System.out.println("Welcome to the Ant Colony Optimiser!");
-            System.out.println("Do you wish to run the tests and generate graphs? (Y/N)");
-             while (true) {
-                String runTests = reader.nextLine();
-                if (runTests.equalsIgnoreCase("Y")) {
-                    System.out.println("Running tests now.");
-                    aco.runTests(); 
-                    break;
-                } else if (runTests.equalsIgnoreCase("N")) {
-                    System.out.println("Continuing to ACO simulator.");
-                    break;
-                } else {
-                    System.out.println("Please enter Y or N");
-                }
-
-            }
             System.out.println("Please enter the file name you wish to use:\n");
-            File acoFile = new File(reader.nextLine());
+            String input = reader.nextLine();
+            if(input.equals("-1")){
+                aco.runTests();
+                break;
+            }
+            File acoFile = new File(input);
             Document doc = null;
             try {
                 doc = aco.parseXML(acoFile);
