@@ -269,7 +269,6 @@ public class AntColonyOptimiser {
                 }
                 
             }
-            System.out.println(localBestFitness);
            if(localBestFitness != Integer.MAX_VALUE){
             x.add(fitnessEvals * 1.0);
             y.add(localBestFitness);
@@ -340,7 +339,6 @@ public class AntColonyOptimiser {
             antTestFitnesses.add(fitness1);
             ArrayList<Double> xVals = getX();
             ArrayList<Double> yVals = getY();
-            System.out.println(yVals.size());
             for (int i = 0; i < xVals.size(); i++) {
                 if (xVals.get(i) != null) {
                     numberOfFitnessEvals[0][i] = Double.valueOf(xVals.get(i));
@@ -443,7 +441,6 @@ public class AntColonyOptimiser {
 
             for(int i = 0; i < 10; i++){
                 ABFitness = runAntColonySim(gBurmaAB, 100, 0.7, alpha, beta, 1, 10000, false, 0, false, false);
-                System.out.println(ABFitness);
                 ArrayList<Double> xValsAB = getX();
                 ArrayList<Double> yValsAB = getY();
              for (int j = 0; j < xValsAB.size(); j++) {
@@ -587,7 +584,6 @@ public class AntColonyOptimiser {
             antTestFitnesses.add(fitness1Br);
             ArrayList<Double> xValsbr = getX();
             ArrayList<Double> yValsbr = getY();
-            System.out.println(yValsbr.size());
             for (int i = 0; i < xValsbr.size(); i++) {
                 if (xValsbr.get(i) != null) {
                     numberOfFitnessEvalsBr[0][i] = Double.valueOf(xValsbr.get(i));
@@ -698,7 +694,6 @@ public class AntColonyOptimiser {
 
             for(int i = 0; i < 10; i++){
                 ABFitnessbr = runAntColonySim(gBrazil, 100, 0.7, alphabr, betabr, 1, 10000, false, 0, false, false);
-                System.out.println(ABFitnessbr);
                 ArrayList<Double> xValsABbr = getX();
                 ArrayList<Double> yValsABbr = getY();
              for (int j = 0; j < xValsABbr.size(); j++) {
