@@ -7,7 +7,7 @@ Javadocs for this project can be found in the javadoc folder.
 
 To run this project, either open in an IDE of your choosing and run the main function located in AntColonyOptimiser.java, or use the following command line commands:
 
-> `java -jar nature_inspired_CA.jar`
+`java -jar nature_inspired_CA.jar`
 
 # Dependencies
 
