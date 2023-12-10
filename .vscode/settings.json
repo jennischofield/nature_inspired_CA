@@ -1,5 +1,10 @@
 {
-    "java.project.referencedLibraries": [
-        "lib/**/*.jar"
-    ]
+    "java.project.referencedLibraries": {
+        "include": [
+            "lib/**/*.jar"
+        ],
+        "exclude": [
+            "lib/jfreechart-1.0.1/lib/gnujaxp.jar"
+        ]
+    }
 }

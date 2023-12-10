@@ -7,7 +7,7 @@ Javadocs for this project can be found in the javadoc folder.
 
 To run this project, either open in an IDE of your choosing and run the main function located in AntColonyOptimiser.java, or use the following command line commands:
 
-> `java -jar nature_inspired_CA.jar`
+`java -jar nature_inspired_CA.jar`
 
 # Dependencies
 
@@ -29,3 +29,10 @@ The ACO takes in 11 parameters -
 1. Viewing Best Path with Weights - whether or not the user wants to see a visual represenation of the best path with the edge weights.
 
 The ACO will return the best fitness found overall.
+
+# Running other graphs
+
+If you wish to run the ACO over another file, it must be in the TSPLIB format, and an XML file. Place it in the root folder, along with brazil58.xml and burma14.xml
+
+# Running tests and generate graphs
+If desired, when prompted for a file name, you can enter "-1" to run result data generators. This was to add graphs to the associated report, but the code is not optimised, takes long to run, and is not advised to run. The resulting graphs can be found in /images/. 
