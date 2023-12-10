@@ -1,15 +1,19 @@
 package src;
-
 import java.io.*;
 import java.util.Scanner;
 import javax.xml.parsers.*;
+
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 import java.util.ArrayList;
 import java.util.Random;
 
 public class AntColonyOptimiser {
+    ArrayList<Double> y = new ArrayList<Double>();
 
+    public ArrayList<Double> getY(){
+        return y;
+    }
     /**
      * Parses the input XML file and accesses the DOM structure
      * 
@@ -205,6 +209,8 @@ public class AntColonyOptimiser {
                 // Calculate that Ant's path and fitness
                 a.calculatePath(graph.getCities(), alpha, beta);
                 double antFitness = a.calculateOverallFitness();
+                //This y is used for graphing testing results
+                y.add(antFitness);
                 fitnessEvals++;
                 // If the ant's fitness is better than the best fitness so far - we are
                 // minimising the fitness
@@ -269,7 +275,14 @@ public class AntColonyOptimiser {
         }
         return bestFitness;
     }
+    public void runTests(){
+        //Run all the tests
 
+    }
+    public void displayResults(String appName, String plotTitle, int[][] xCoor, int[][] yCoor, String[] datasetName){
+        XYLinePlot chart = new XYLinePlot(appName, plotTitle, xCoor, yCoor, datasetName);
+        chart.savePlot("/images/"+plotTitle);
+    }
     /**
      * Main method, take in user input and initialise Graph before running the ACO
      * 
