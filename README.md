@@ -1,7 +1,7 @@
 # nature_inspired_CA
 This repo contains all the relevant files for the NIC coursework, 2023.
 
-Javadocs for this project can be found in the javadoc folder.
+Javadocs for this project can be found in the Javadoc folder.
 
 # Getting Started
 
@@ -26,7 +26,7 @@ To generate the testing graphs, the JFreeChart library was used. A normal run of
 The ACO takes in 11 parameters - 
 1. File name - the name of the XML file to read in the Graph structure.
 1. Number of Ants - the population size of the colony.
-1. Evaporation Rate - the rate of which the pheromone will evaporate from an edge.
+1. Evaporation Rate - the rate at which the pheromone will evaporate from an edge.
 1. Alpha - the effect the pheromone has on the path calculation.
 1. Beta -the effect the weight of an edge has on the path calculation.
 1. Q - the pheromone update rate, used in the equation Q/fitness.
@@ -34,7 +34,7 @@ The ACO takes in 11 parameters -
 1. Elitism - whether or not to use the elitism variation of ACO.
 1. Rank - whether or not to use the ranked ants variation of ACO. If so, it then will ask for how many elite ants
 1. Viewing Best Path - whether or not the user wants to see a visual representation of the best path
-1. Viewing Best Path with Weights - whether or not the user wants to see a visual represenation of the best path with the edge weights.
+1. Viewing Best Path with Weights - whether or not the user wants to see a visual representation of the best path with the edge weights.
 
 The ACO will return the best fitness found overall.
 
@@ -42,11 +42,11 @@ The ACO will return the best fitness found overall.
 
 If you wish to run the ACO over another file, it must be in the TSPLIB format, and an XML file. Place it in the root folder, along with brazil58.xml and burma14.xml
 
-# Running tests and generate graphs
+# Running tests and generating graphs
 If desired, when prompted for a file name, you can enter "-1" to run result data generators. This was to add graphs to the associated report, but the code is not optimised, takes long to run, and is not advised to run. The resulting graphs can be found in /images/. 
 
 # Known error
 If you try to run the optimiser and get the error: 
 `Receiver class gnu.xml.dom.DomElement does not define or inherit an implementation of the resolved method 'abstract java.lang.String getTextContent()' of interface org.w3c.dom.Node.`
 
-This is an error from the JFreeChart library - simply delete the gnujaxp.jar file from the class path.
+This is an error from the JFreeChart library - simply delete the gnujaxp.jar file from the classpath and from lib\jfreechart-1.0.1\lib.
