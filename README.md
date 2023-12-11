@@ -9,6 +9,14 @@ To run this project, either open in an IDE of your choosing and run the main fun
 
 `java -jar nature_inspired_CA.jar`
 
+If you wish to run the simulation without navigating through the menus, you may use command line arguments in the format:
+
+`java -jar nature_inspired_CA.jar <filename> <number of ants> <evaporation rate> <alpha> <beta> <q> <termination count> <elitism> <rank> <viewing best path> <viewing best path with weights>`
+
+For example, to run the Burma dataset, with 100 ants, an evaporation rate of 0.7, an alpha/beta of 0.5/0.5, a q of 1, a termination count of 10,000, without elitism, with 20 ranked ants, and to not see the best path, with or without weights, the command would be:
+
+`java -jar nature_inspired_CA.jar burma14.xml 100 0.7 0.5 0.5 1 10000 false 20 false false`
+
 # Dependencies
 
 To generate the testing graphs, the JFreeChart library was used. A normal run of the optimiser has no other dependencies.
