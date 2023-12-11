@@ -44,3 +44,9 @@ If you wish to run the ACO over another file, it must be in the TSPLIB format, a
 
 # Running tests and generate graphs
 If desired, when prompted for a file name, you can enter "-1" to run result data generators. This was to add graphs to the associated report, but the code is not optimised, takes long to run, and is not advised to run. The resulting graphs can be found in /images/. 
+
+# Known error
+If you try to run the optimiser and get the error: 
+`Receiver class gnu.xml.dom.DomElement does not define or inherit an implementation of the resolved method 'abstract java.lang.String getTextContent()' of interface org.w3c.dom.Node.`
+
+This is an error from the JFreeChart library - simply delete the gnujaxp.jar file from the class path.
