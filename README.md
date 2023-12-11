@@ -9,6 +9,14 @@ To run this project, either open in an IDE of your choosing and run the main fun
 
 `java -jar nature_inspired_CA.jar`
 
+If you wish to run the simulation without navigating through the menus, you may use command line arguments in the format:
+
+`java -jar nature_inspired_CA.jar <filename> <number of ants> <evaporation rate> <alpha> <beta> <q> <termination count> <elitism> <rank> <viewing best path> <viewing best path with weights>`
+
+For example, to run the Burma dataset, with 100 ants, an evaporation rate of 0.7, an alpha/beta of 0.5/0.5, a q of 1, a termination count of 10,000, without elitism, with 20 ranked ants, and to not see the best path, with or without weights, the command would be:
+
+`java -jar nature_inspired_CA.jar burma14.xml 100 0.7 0.5 0.5 1 10000 false 20 false false`
+
 # Dependencies
 
 To generate the testing graphs, the JFreeChart library was used. A normal run of the optimiser has no other dependencies.
@@ -36,3 +44,9 @@ If you wish to run the ACO over another file, it must be in the TSPLIB format, a
 
 # Running tests and generate graphs
 If desired, when prompted for a file name, you can enter "-1" to run result data generators. This was to add graphs to the associated report, but the code is not optimised, takes long to run, and is not advised to run. The resulting graphs can be found in /images/. 
+
+# Known error
+If you try to run the optimiser and get the error: 
+`Receiver class gnu.xml.dom.DomElement does not define or inherit an implementation of the resolved method 'abstract java.lang.String getTextContent()' of interface org.w3c.dom.Node.`
+
+This is an error from the JFreeChart library - simply delete the gnujaxp.jar file from the class path.
